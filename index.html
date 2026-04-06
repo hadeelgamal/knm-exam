@@ -154,6 +154,155 @@
       margin-top: 8px;
     }
 
+    /* ── Completed exam card state ────────────────── */
+    .exam-card { position: relative; }
+    .exam-card.done {
+      border-color: var(--correct);
+      background: linear-gradient(160deg, #fff 60%, var(--correct-bg) 100%);
+    }
+    .exam-card .done-check {
+      display: none;
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--correct);
+      color: #fff;
+      font-size: .6rem;
+      font-weight: 700;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 4px rgba(26,122,69,.35);
+    }
+    .exam-card.done .done-check { display: flex; }
+    .exam-card .score-chip {
+      display: none;
+      font-size: .65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      margin-top: 5px;
+    }
+    .exam-card.done .score-chip { display: inline-block; }
+    .exam-card .score-chip.pass { background: var(--correct-bg); color: var(--correct); }
+    .exam-card .score-chip.fail { background: var(--wrong-bg); color: var(--wrong); }
+
+    /* ── Score history panel ──────────────────────── */
+    .score-history {
+      margin-bottom: 32px;
+    }
+    .score-history-title {
+      font-family: 'Lora', serif;
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--blue);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .score-history-title .attempt-count {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .72rem;
+      font-weight: 600;
+      background: var(--blue-light);
+      color: var(--blue-mid);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .history-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border: 1.5px solid var(--gray-100);
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: .85rem;
+    }
+    .history-row.current-attempt {
+      border-color: var(--blue-mid);
+      background: var(--blue-light);
+    }
+    .history-row .h-attempt {
+      font-size: .68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--gray-400);
+      min-width: 60px;
+    }
+    .history-row .h-score {
+      font-family: 'Lora', serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--gray-900);
+      flex: 1;
+    }
+    .history-row .h-pct {
+      font-size: .8rem;
+      color: var(--gray-400);
+    }
+    .history-row .h-badge {
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .h-badge.pass { background: var(--correct-bg); color: var(--correct); }
+    .h-badge.fail { background: var(--wrong-bg); color: var(--wrong); }
+    .history-row .h-date {
+      font-size: .75rem;
+      color: var(--gray-400);
+      white-space: nowrap;
+    }
+
+    /* ── Select screen stats bar ──────────────────── */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff;
+      border: 1.5px solid var(--gray-100);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin-bottom: 28px;
+      font-size: .88rem;
+    }
+    .stats-bar .stats-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .stats-bar .stats-text {
+      flex: 1;
+      color: var(--gray-700);
+    }
+    .stats-bar .stats-text strong {
+      color: var(--blue);
+      font-weight: 700;
+    }
+    .stats-progress-wrap {
+      width: 80px;
+      height: 6px;
+      background: var(--gray-100);
+      border-radius: 99px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .stats-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--correct), #2ecc71);
+      border-radius: 99px;
+      transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+
     /* ── EXAM SCREEN ──────────────────────────────── */
     #screen-exam {
       max-width: 720px;
@@ -739,8 +888,14 @@
       <h2>Kies een oefentoets</h2>
       <p>40 vragen per toets · Antwoorden worden direct gecontroleerd</p>
     </div>
+    <div class="stats-bar" id="stats-bar" style="display:none">
+      <span class="stats-icon">📊</span>
+      <span class="stats-text" id="stats-text"></span>
+      <div class="stats-progress-wrap">
+        <div class="stats-progress-fill" id="stats-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
     <div class="exam-grid" id="exam-grid"></div>
-
   </div>
 
   <!-- ── EXAM ──────────────────────────── -->
@@ -790,6 +945,13 @@
       <button class="btn btn-secondary" onclick="backToSelect()">← Alle toetsen</button>
       <button class="btn btn-primary" id="retry-btn" onclick="retryExam()">Opnieuw proberen</button>
     </div>
+    <div class="score-history" id="score-history" style="display:none">
+      <div class="score-history-title">
+        Scoregeschiedenis
+        <span class="attempt-count" id="attempt-count"></span>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
     <div class="review-title">Toetsreview — alle vragen</div>
     <div id="review-list"></div>
   </div>
@@ -803,6 +965,36 @@
     let currentQIndex = 0;
     let userAnswers = {};        // { qNum: letter }
     let submitted = false;
+
+    // ── Score persistence ────────────────────────────
+    const STORAGE_KEY = 'knm_scores_v1';
+
+    function loadScores() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+      catch { return {}; }
+    }
+
+    function saveScore(examNum, correct, total) {
+      const scores = loadScores();
+      if (!scores[examNum]) scores[examNum] = [];
+      scores[examNum].push({
+        correct,
+        total,
+        pct: Math.round((correct / total) * 100),
+        date: new Date().toISOString()
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+    }
+
+    function getExamHistory(examNum) {
+      return loadScores()[examNum] || [];
+    }
+
+    function getBestScore(examNum) {
+      const history = getExamHistory(examNum);
+      if (!history.length) return null;
+      return history.reduce((best, h) => h.pct > best.pct ? h : best, history[0]);
+    }
 
     // ── Init ─────────────────────────────────────────
     function init() {
@@ -826,16 +1018,45 @@
     function buildGrid() {
       const grid = document.getElementById('exam-grid');
       grid.innerHTML = '';
+      const scores = loadScores();
+      let completedCount = 0;
+
       EXAM_DATA.forEach(exam => {
+        const history = scores[exam.num] || [];
+        const best = history.length
+          ? history.reduce((b, h) => h.pct > b.pct ? h : b, history[0])
+          : null;
+        const isDone = history.length > 0;
+        if (isDone) completedCount++;
+
         const card = document.createElement('div');
-        card.className = 'exam-card';
+        card.className = 'exam-card' + (isDone ? ' done' : '');
+
+        const scoreChipClass = best && best.pct >= 70 ? 'pass' : 'fail';
+        const scoreChipText = best ? `${best.pct}%` : '';
+
         card.innerHTML = `
+          <div class="done-check">✓</div>
           <div class="num">${String(exam.num).padStart(2,'0')}</div>
           <div class="label">Toets</div>
-          <div class="badge">${exam.questions.length} vragen</div>`;
+          <div class="badge">${exam.questions.length} vragen</div>
+          <div class="score-chip ${scoreChipClass}">${scoreChipText}</div>`;
         card.addEventListener('click', () => startExam(exam));
         grid.appendChild(card);
       });
+
+      // Stats bar
+      const total = EXAM_DATA.length;
+      const statsBar = document.getElementById('stats-bar');
+      const statsText = document.getElementById('stats-text');
+      const statsFill = document.getElementById('stats-progress-fill');
+      if (completedCount > 0) {
+        statsBar.style.display = 'flex';
+        statsText.innerHTML = `<strong>${completedCount} / ${total}</strong> toetsen voltooid`;
+        statsFill.style.width = Math.round((completedCount / total) * 100) + '%';
+      } else {
+        statsBar.style.display = 'none';
+      }
     }
 
     // ── Start ─────────────────────────────────────────
@@ -1007,6 +1228,10 @@
       const total = qs.length;
       const pct = Math.round((correct / total) * 100);
 
+      // Save score and refresh grid
+      saveScore(exam.num, correct, total);
+      buildGrid();
+
       // Score circle
       document.getElementById('score-number').textContent = correct;
       document.getElementById('score-total').textContent = `/ ${total}`;
@@ -1032,8 +1257,45 @@
         ring.style.strokeDashoffset = offset;
       }));
 
-      // Review
+      // Score history + Review
+      buildScoreHistory();
       buildReview();
+    }
+
+    function buildScoreHistory() {
+      const history = getExamHistory(currentExam.num);
+      const section = document.getElementById('score-history');
+      const list = document.getElementById('history-list');
+      const countEl = document.getElementById('attempt-count');
+
+      if (history.length <= 1) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      countEl.textContent = `${history.length} pogingen`;
+      list.innerHTML = '';
+
+      // Show newest first; the last entry is the current attempt
+      const reversed = [...history].reverse();
+      reversed.forEach((h, i) => {
+        const isCurrent = i === 0;
+        const passClass = h.pct >= 70 ? 'pass' : 'fail';
+        const passLabel = h.pct >= 70 ? 'Geslaagd' : 'Gezakt';
+        const dateStr = new Date(h.date).toLocaleDateString('nl-NL', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+        const row = document.createElement('div');
+        row.className = 'history-row' + (isCurrent ? ' current-attempt' : '');
+        row.innerHTML = `
+          <span class="h-attempt">${isCurrent ? 'Nu' : `#${history.length - i}`}</span>
+          <span class="h-score">${h.correct} / ${h.total}</span>
+          <span class="h-pct">${h.pct}%</span>
+          <span class="h-badge ${passClass}">${passLabel}</span>
+          <span class="h-date">${dateStr}</span>`;
+        list.appendChild(row);
+      });
     }
 
     function buildReview() {
