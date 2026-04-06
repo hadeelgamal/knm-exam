@@ -169,16 +169,17 @@ function writeOutput() {
 
 // ── Translation generation ────────────────────────────────────────────────────
 async function generateTranslation(task, attempt = 1) {
-  const { examNum, q, correctLetter, exam } = task;
-  const optionsList = q.options.map(o => `"${o.letter}": "${o.text.replace(/"/g, '\\"')}"`).join(', ');
+  const { examNum, q } = task;
+  const emptySlots = q.options.map(o => `"${o.letter}":""`).join(',');
+  const dutchOptions = q.options.map(o => `${o.letter}) ${o.text}`).join('\n');
 
-  const prompt = `Translate the following Dutch civic integration exam question and its answer options into English. Return ONLY valid JSON with exactly this structure, no extra text:
-{"question":"<translated question>","options":{${optionsList.replace(/: ".*?"/g, ': "<translated>"')}}}
+  const prompt = `Translate this Dutch civic integration (KNM) exam question and all answer options into natural English.
+Return ONLY valid JSON with this exact structure — no markdown, no explanation:
+{"question":"","options":{${emptySlots}}}
 
 Dutch question: ${q.text}
-Options: ${q.options.map(o => `${o.letter}) ${o.text}`).join(' | ')}
-
-Return valid JSON only.`;
+Options:
+${dutchOptions}`;
 
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -189,7 +190,7 @@ Return valid JSON only.`;
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 300,
+      max_tokens: 400,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
